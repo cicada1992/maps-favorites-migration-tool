@@ -22,8 +22,8 @@ export class GoogleMapDriver extends AbstractDriver {
         try {
           await this.checkLogin(webContents);
           await contentWindow.showLoading();
-          const folders = await this.getFolders(webContents);
           const result: FavoriteFolder[] = [];
+          const folders = await this.getFolders(webContents);
           for (const folder of folders) {
             const items = await this.getItemsBelongToFolder(webContents, folder.id);
             if (items.length) result.push({ name: folder.name, items })
@@ -84,17 +84,29 @@ export class GoogleMapDriver extends AbstractDriver {
     )
     const parsedItems: unknown[] = this.parseResponse(itemsResponse)[0][8] || [];
     const items = parsedItems.map((item: any[]) => {
+      const latLng = { lat: item[1][5][2], lng: item[1][5][3] };
+      const isInKorea = this.isInKorea(latLng);
+      if (!isInKorea) return;
       const favoriteItem: FavoriteItem = {
         name: item[2],
         description: item[3],
-        latLng: { lat: item[1][5][2], lng: item[1][5][3] },
+        latLng,
       }
       return favoriteItem;
-    });
+    }).filter(Boolean);
     return items;
   }
 
   private parseResponse(responseText: string) {
     return JSON.parse(responseText.replace(")]}'\n", ''))
+  }
+
+  // 대한민국에 속한 위경도 인지 체크
+  private isInKorea(latLng: FavoriteItem['latLng']) {
+    const minLat = 33.0;
+    const maxLat = 38.6;
+    const minLng = 124.0;
+    const maxLng = 132.0;
+    return latLng.lat >= minLat && latLng.lat <= maxLat && latLng.lng >= minLng && latLng.lng <= maxLng;
   }
 }

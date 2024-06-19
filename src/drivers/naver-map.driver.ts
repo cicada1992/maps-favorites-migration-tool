@@ -55,9 +55,10 @@ export class NaverMapDriver extends AbstractDriver {
 
               // place 검색
               // https://map.naver.com/p/api/entry/addressInfo?lng=127.77770299999989&lat=36.16769449999979&address= -> place
+              const addressQuery = srcItem.address ? `${srcItem.address} ${srcItem.name}` : await this.getFallbackAddressQuery(webContents, srcItem);
               const addressInfo: NaverAddressInfo = await webContents.executeJavaScript(
                 //language=js
-                `__Bridge.fetch({ url: '/p/api/entry/addressInfo?lng=${srcItem.latLng.lng}&lat=${srcItem.latLng.lat}&address=${encodeURIComponent((srcItem.address ?? '') + ' ' + srcItem.name)}' }).then(r => r.data);`,
+                `__Bridge.fetch({ url: '/p/api/entry/addressInfo?lng=${srcItem.latLng.lng}&lat=${srcItem.latLng.lat}&address=${encodeURIComponent(addressQuery)}' }).then(r => r.data);`,
               );
               if ((addressInfo?.place?.count ?? 0) <= 0) continue;
 
@@ -125,6 +126,20 @@ export class NaverMapDriver extends AbstractDriver {
 
   public view<CreateNaverFavoriteItemDto>(contentWindow: ContentWindow, item: FailedFavoriteItem): void {
     contentWindow.view.webContents.loadURL(`https://map.naver.com/p/entry/place/${item.data.sid}`);
+  }
+
+  private async getFallbackAddressQuery(webContents: Electron.WebContents, { name, latLng }: FailedFavoriteItem): Promise<string> {
+    const { results } = await webContents.executeJavaScript(
+      //language-js
+      `__Bridge.fetch({
+            method: 'GET',
+            url: 'https://map.naver.com/p/api/location/geocode?coords=${latLng.lng},${latLng.lat}&orders=legalcode',
+          }).then(r => r.data);`,
+    )
+    if (!results?.[0]?.['region']) return name;
+    const { area1, area2, area3 } = results[0]['region'];
+    if (!area1.name) return name;
+    return `${area1.name}${area2.name || ''}${area3.name || ''}`;
   }
 }
 
