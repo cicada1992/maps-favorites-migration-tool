@@ -35,7 +35,6 @@ export class GoogleMapDriver extends AbstractDriver {
           `__Bridge.fetch({
             method: 'GET',
             url: 'https://www.google.com/locationhistory/preview/mas?authuser=0&hl=ko&gl=kr&pb=!2m3!1s_jFyZufrE6LJ0-kPrue66As!7e81!15i17409!7m1!1i50!12m1!1i50!15m1!1i50!23m1!1i50!24m1!1i50!38m1!1i50',
-            withCredentials: true,
           }).then(r => r.data);`,
         )
         const parsedFolderList: unknown[] = this.parseResponse(folderResponse)[29][0]
