@@ -2,6 +2,7 @@ import { BrowserWindow, app } from 'electron';
 import 'reflect-metadata';
 
 import { KakaoPlaceDriver } from '../../drivers/kakao-place.driver';
+import { GoogleMapDriver } from '../..//drivers/google-map.driver';
 import { NaverMapDriver } from '../../drivers/naver-map.driver';
 import { MainWindow } from '../../types/window/main-window.type';
 
@@ -15,7 +16,7 @@ const createWindow = (): void => {
   // Create the browser window.
   mainWindow = new MainWindow(app);
 
-  mainWindow.init(new KakaoPlaceDriver(), new NaverMapDriver());
+  mainWindow.init(new GoogleMapDriver(), new NaverMapDriver());
 };
 
 app
